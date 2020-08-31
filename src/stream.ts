@@ -31,3 +31,8 @@ export const take = <T>(s: Stream<T>, n: number): Promise<L.List<T>> =>
   n <= 0 || s.tag === 'Nil' ? Promise.resolve(L.Nil) :
   s.tag === 'Cons' ? take(s.tail, n - 1).then(rest => L.Cons(s.head, rest)) :
   s.promise().then(t => take(t, n));
+
+export const takeAll = <T>(s: Stream<T>): Promise<L.List<T>> =>
+  s.tag === 'Nil' ? Promise.resolve(L.Nil) :
+  s.tag === 'Cons' ? takeAll(s.tail).then(rest => L.Cons(s.head, rest)) :
+  s.promise().then(t => takeAll(t));

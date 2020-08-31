@@ -2,6 +2,8 @@ An implementation of microKanren in TypeScript.
 Uses an asynchronous stream based on Promises.
 The goal is to have a version of Kanren backed by a Entity-Attribute-Value store.
 
+Try it out at https://atennapel.github.io/async-kanren
+
 ```typescript
 import { Term, all, runAll } from './kanren';
 import { take } from './stream';

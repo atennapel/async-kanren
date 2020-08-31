@@ -1,5 +1,5 @@
 import { Term, all, runAll } from './kanren';
-import { take } from './stream';
+import { takeAll } from './stream';
 import { toArray } from './list';
 import * as Store from './store';
 import { EAV } from './store';
@@ -32,7 +32,7 @@ import { v4 as uuid } from 'uuid';
     fact(entity, 'name', name),
     fact(entity, 'phone', phone),
   ]));
-  const results = await take(res, 100);
+  const results = await takeAll(res);
   console.log(toArray(results));
 
   await store.close();
