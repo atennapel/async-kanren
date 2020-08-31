@@ -7,7 +7,8 @@ export type Id = number;
 export class Var { id: Id; constructor(id: Id) { this.id = id } }
 export const MkVar = (id: Id): Var => new Var(id);
 
-export type Term = number | string | Var;
+export type Prim = number | string;
+export type Term = Prim | Var;
 
 export type Env = L.Assoc<Id, Term>;
 
@@ -53,10 +54,19 @@ export const eq = (a: Term, b: Term): Goal => ({ id, env }) => {
 
 export const fail: Goal = _ => S.Nil;
 export const succeed: Goal = state => S.singleton(state);
+export const delay = (g: () => Goal): Goal => state => S.lazy(() => g()(state));
 
 export const disj = (a: Goal, b: Goal): Goal => state => S.append(a(state), S.lazy(() => b(state)));
 export const conj = (a: Goal, b: Goal): Goal => state => S.flatMap(a(state), b);
 export const fresh = (fn: (vr: Var) => Goal): Goal => ({ id, env }) => fn(MkVar(id))(State(id + 1, env));
+
+export const any = (gs: Goal[], i: number = 0): Goal =>
+  i < 0 || i >= gs.length ? fail : disj(gs[i], delay(() => any(gs, i + 1)));
+export const all = (gs: Goal[], i: number = 0): Goal =>
+  i < 0 || i >= gs.length ? succeed : conj(gs[i], delay(() => all(gs, i + 1)));
+
+export const anyOf = (a: Prim[]) => (x: Term) => any(a.map(y => eq(x, y)));
+export const allOf = (a: Prim[]) => (x: Term) => all(a.map(y => eq(x, y)));
 
 export const run = (fn: (vr: Var) => Goal): S.Stream<Term> =>
   S.map(fresh(fn)(initial), ({ env }) => walk(env, MkVar(initial.id)));

@@ -1,8 +1,11 @@
-import { disj, eq, run, Term } from './kanren';
+import { run, Term, Goal, conj, anyOf } from './kanren';
 import { take } from './stream';
 import { toArray } from './list';
 
-const goal = (x: Term) => disj(eq(x, 1), eq(x, 2));
+const fruit = anyOf(['apple', 'pear', 'banana', 'melon']);
+const tasty = anyOf(['apple', 'pear'])
+
+const goal = (x: Term): Goal => conj(fruit(x), tasty(x));
 const res = run(goal);
 
 (async () => {
