@@ -11,6 +11,10 @@ function _input() {
     });
   });
 };
-initREPL(() => {
+initREPL(err => {
+  if (err) {
+    console.log(err);
+    return;
+  }
   _input();
 });

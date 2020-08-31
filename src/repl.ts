@@ -1,9 +1,9 @@
-import { SqliteStore } from './sqlitestore';
 import { v4 as uuid } from 'uuid';
-import { EAV, fact } from './store';
+import { EAV, fact, MutableStore } from './store';
 import { runAllN, Term } from './kanren';
 import { takeAll } from './stream';
 import { toArray } from './list';
+import { SimpleStore } from './simplestore';
 
 const helpMessage = `
 COMMANDS
@@ -14,11 +14,15 @@ COMMANDS
 ? entity/attribute/value : query
 `.trim();
 
-let store: SqliteStore = new SqliteStore();
+let store: MutableStore = new SimpleStore();
 
-export const initREPL = async (cb: () => void) => {
-  await store.initialize();
-  cb();
+export const initREPL = async (cb: (error?: Error) => void) => {
+  try {
+    await store.initialize();
+    cb();
+  } catch (err) {
+    cb(err);
+  }
 };
 
 export const runREPL = async (_s: string, cb: (msg: string, err?: boolean) => void) => {
@@ -26,8 +30,9 @@ export const runREPL = async (_s: string, cb: (msg: string, err?: boolean) => vo
     _s = _s.trim();
     if (_s === ':help') return cb(helpMessage);
     if (_s.startsWith(':db')) {
+      const sqlitestore = require('./sqlitestore');
       const db = _s.slice(3).trim();
-      store = new SqliteStore(db);
+      store = new sqlitestore.SqliteStore(db);
       await store.initialize();
       return cb(`changed database to ${db}`);
     }

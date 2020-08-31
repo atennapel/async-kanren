@@ -8,6 +8,8 @@ export class SimpleStore implements MutableStore {
     this.store = initial;
   }
 
+  initialize(): Promise<true> { return Promise.resolve(true) }
+
   async add(eavs: EAV[]): Promise<true> {
     for (let i = 0, l = eavs.length; i < l; i++) this.store.push(eavs[i]);
     return true;

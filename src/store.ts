@@ -5,6 +5,7 @@ export const EAV = (entity: string, attribute: string, value: Prim): EAV =>
   ({ entity, attribute, value });
 
 export interface Store {
+  initialize(): Promise<true>;
   query(e: string | null, a: string | null, v: Prim | null): Promise<EAV[]>;
 }
 

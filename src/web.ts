@@ -10,7 +10,11 @@ window.addEventListener('resize', onresize);
 onresize();
 addResult('async-kanren repl');
 input.focus();
-initREPL(() => {
+initREPL(err => {
+	if (err) {
+		addResult('' + err, true);
+		return;
+	}
 	input.onkeydown = function(keyEvent: any) {
 		var val = input.value;
 		var txt = (val || '').trim();
