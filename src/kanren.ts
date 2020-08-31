@@ -1,14 +1,18 @@
 import * as L from './list';
 import * as S from './stream';
+import { isArray } from 'util';
 
 export type Id = number;
 
 // using a class here just so that I can use instanceof
 export class Var { id: Id; constructor(id: Id) { this.id = id } }
+export const isVar = (t: Term): t is Var => t instanceof Var;
 export const MkVar = (id: Id): Var => new Var(id);
 
 export type Prim = number | string;
-export type Term = Prim | Var;
+export const isPrim = (t: Term): t is Prim =>
+  typeof t === 'string' || typeof t === 'number';
+export type Term = Prim | Var | Term[];
 
 export type Env = L.Assoc<Id, Term>;
 
@@ -20,20 +24,22 @@ export type Goal = (state: State) => S.Stream<State>;
 export const initial: State = { id: 0, env: L.Nil };
 
 export const walk = (s: Env, t: Term): Term => {
-  if (t instanceof Var) {
+  if (isVar(t)) {
     const v = L.find(s, t.id);
     return v === null ? t : v;
   }
+  if (isArray(t)) return t.map(x => walk(s, x));
   return t;
 };
 
 const occurs = (id: Id, t: Term): boolean => {
-  if (t instanceof Var) return t.id === id;
+  if (isVar(t)) return t.id === id;
+  if (isArray(t)) return t.some(x => occurs(id, x));
   return false;
 };
 
 const bindVar = (s: Env, id: Id, t: Term): Env | null => {
-  if(t instanceof Var && id === t.id) return s;
+  if(isVar(t) && id === t.id) return s;
   if(occurs(id, t)) return null;
   return L.assoc(s, id, t);
 };
@@ -42,8 +48,18 @@ export const unify = (s: Env, a_: Term, b_: Term): Env | null => {
   const a = walk(s, a_);
   const b = walk(s, b_);
   if (a === b) return s;
-  if (a instanceof Var) return bindVar(s, a.id, b);
-  if (b instanceof Var) return bindVar(s, b.id, a);
+  if (isVar(a)) return bindVar(s, a.id, b);
+  if (isVar(b)) return bindVar(s, b.id, a);
+  if (isArray(a) && isArray(b)) {
+    const l = a.length;
+    if (b.length !== l) return null;
+    let c: Env | null = s;
+    for (let i = 0; i < l; i++) {
+      c = unify(c, a[i], b[i]);
+      if (c === null) return null;
+    }
+    return c;
+  }
   return null;
 };
 
